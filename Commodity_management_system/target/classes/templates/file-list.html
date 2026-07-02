@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件管理</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #f4f6f9; }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff; padding: 0 30px; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .header .sys-name { font-size: 18px; font-weight: bold; }
+        .header a { color: #ffd700; text-decoration: none; font-size: 14px; }
+        .header a:hover { text-decoration: underline; }
+        .container { max-width: 1000px; margin: 25px auto; padding: 0 20px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .file-count { color: #666; }
+        .file-count strong { color: #333; }
+        .table-box {
+            background: #fff; border-radius: 8px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.06); overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        table th {
+            background: #f7fafc; color: #4a5568; font-size: 13px;
+            padding: 12px 10px; text-align: left; border-bottom: 2px solid #e2e8f0;
+        }
+        table td { padding: 10px; font-size: 14px; border-bottom: 1px solid #edf2f7; }
+        table tbody tr:hover { background: #f7fafc; }
+        .file-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #eee; }
+        .file-icon {
+            width: 60px; height: 60px; border-radius: 5px; background: #edf2f7;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 28px;
+        }
+        .link { color: #667eea; text-decoration: none; word-break: break-all; }
+        .link:hover { text-decoration: underline; }
+        .btn { padding: 5px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn:hover { opacity: 0.85; }
+        .btn-danger { background: #f56565; color: #fff; }
+        .btn-view { background: #667eea; color: #fff; }
+        .empty { text-align: center; padding: 60px; color: #a0aec0; }
+        .empty span { font-size: 60px; display: block; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span class="sys-name">📁 文件管理</span>
+        <span>
+            <a th:href="@{/index}">返回首页</a> &nbsp;|&nbsp;
+            <a th:href="@{/logout}">退出登录</a>
+        </span>
+    </div>
+
+    <div class="container">
+        <div class="top-bar">
+            <span class="file-count">上传文件共：<strong th:text="${totalCount}">0</strong> 个</span>
+        </div>
+
+        <div class="table-box">
+            <table th:if="${!#lists.isEmpty(files)}">
+                <thead>
+                    <tr>
+                        <th>预览</th>
+                        <th>文件名</th>
+                        <th>大小</th>
+                        <th>上传时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="f : ${files}">
+                        <td>
+                            <img th:if="${f.isImage}" th:src="${f.url}" class="file-preview">
+                            <span th:unless="${f.isImage}" class="file-icon">📄</span>
+                        </td>
+                        <td>
+                            <a th:href="${f.url}" class="link" target="_blank" th:text="${f.name}">file.jpg</a>
+                        </td>
+                        <td th:text="${f.size}">100KB</td>
+                        <td th:text="${#temporals.format(f.lastModified, 'yyyy-MM-dd HH:mm')}">-</td>
+                        <td>
+                            <button class="btn btn-view"
+                                    th:attr="data-url=${f.url}"
+                                    onclick="viewFile(this.dataset.url)">查看</button>
+                            <button class="btn btn-danger"
+                                    th:attr="data-name=${f.name}"
+                                    onclick="doDelete(this.dataset.name)">删除</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div th:if="${#lists.isEmpty(files)}" class="empty">
+                <span>📂</span>
+                <p>暂无上传文件</p>
+                <p style="font-size:13px;margin-top:5px;">上传商品图片或用户头像后在此处管理</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function viewFile(url) {
+            window.open(url, '_blank');
+        }
+        function doDelete(filename) {
+            if (!confirm('确定要删除文件 "' + filename + '" 吗？')) return;
+            fetch('/file/delete?filename=' + encodeURIComponent(filename))
+                .then(r => r.json())
+                .then(res => { alert(res.msg); if (res.code === 200) location.reload(); });
+        }
+    </script>
+</body>
+</html>

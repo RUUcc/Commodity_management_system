@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主页 - 商品管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #f4f6f9; }
+        /* 顶部导航 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 0 30px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header .sys-name { font-size: 20px; font-weight: bold; }
+        .header .user-info { font-size: 14px; }
+        .header .user-info a { color: #ffd700; text-decoration: none; margin-left: 15px; }
+        .header .user-info a:hover { text-decoration: underline; }
+        /* 主体 */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        /* 欢迎卡片 */
+        .welcome-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        .welcome-card h2 { font-size: 28px; color: #333; margin-bottom: 10px; }
+        .welcome-card p { color: #888; font-size: 16px; }
+        /* 功能入口 */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .menu-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .menu-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .menu-card .icon {
+            width: 60px; height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .icon-product { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .icon-user   { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .icon-upload  { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .menu-card .info h3 { font-size: 18px; margin-bottom: 5px; }
+        .menu-card .info p  { font-size: 13px; color: #999; }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="header">
+        <div class="sys-name" th:text="${appName}">商品管理系统</div>
+        <div class="user-info">
+            当前用户：<strong th:text="${loginUser.username}">admin</strong>
+            <a th:href="@{/logout}">退出登录</a>
+        </div>
+    </div>
+
+    <!-- 主体区域 -->
+    <div class="container">
+        <!-- 欢迎 -->
+        <div class="welcome-card">
+            <h2>欢迎使用 <span th:text="${appName}">商品管理系统</span></h2>
+            <p th:text="'当前登录用户：' + ${loginUser.username}">当前登录用户：admin</p>
+        </div>
+
+        <!-- 功能入口 -->
+        <div class="menu-grid">
+            <a class="menu-card" th:href="@{/product/list}">
+                <div class="icon icon-product">📦</div>
+                <div class="info">
+                    <h3>商品管理</h3>
+                    <p>商品的增删改查、分页搜索、图片上传</p>
+                </div>
+            </a>
+            <a class="menu-card" th:href="@{/user/list}">
+                <div class="icon icon-user">👤</div>
+                <div class="info">
+                    <h3>用户管理</h3>
+                    <p>用户信息管理、头像上传</p>
+                </div>
+            </a>
+            <a class="menu-card" th:href="@{/file/list}">
+                <div class="icon icon-upload">📁</div>
+                <div class="info">
+                    <h3>文件管理</h3>
+                    <p>上传文件查看、预览、删除</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

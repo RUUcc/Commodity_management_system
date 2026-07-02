@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+spring:
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/commodity_db?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf-8&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+
+  # Thymeleaf 模板配置
+  thymeleaf:
+    cache: true               # 开发阶段关闭缓存，方便调试
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+    mode: HTML
+
+  # 缓存类型
+  cache:
+    type: caffeine
+
+  # 文件上传大小限制
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl   # 控制台打印 SQL
+    map-underscore-to-camel-case: true                        # 下划线转驼峰
+  global-config:
+    db-config:
+      id-type: auto                                           # 主键自增
+  mapper-locations: classpath*:/mapper/**/*.xml               # Mapper XML 文件位置
+
+# 自定义配置（演示 @Value 注解读取）
+app:
+  name: 商品管理系统
+  upload-path: D:/spring-boot/期末设计/uploads/

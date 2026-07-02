@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品管理 - 商品列表</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #f4f6f9; }
+        /* 顶部 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 0 30px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header .sys-name { font-size: 18px; font-weight: bold; }
+        .header a { color: #ffd700; text-decoration: none; font-size: 14px; }
+        .header a:hover { text-decoration: underline; }
+        /* 内容区 */
+        .container { max-width: 1200px; margin: 25px auto; padding: 0 20px; }
+        /* 搜索栏 */
+        .search-bar {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .search-bar .field { display: flex; flex-direction: column; gap: 5px; }
+        .search-bar label { font-size: 13px; color: #666; }
+        .search-bar input, .search-bar select {
+            padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;
+        }
+        .btn { padding: 8px 18px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: #667eea; color: #fff; }
+        .btn-success { background: #48bb78; color: #fff; }
+        .btn-danger  { background: #f56565; color: #fff; }
+        .btn-secondary { background: #a0aec0; color: #fff; }
+        /* 表格 */
+        .table-box {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        table {
+            width: 100%; border-collapse: collapse;
+        }
+        table th {
+            background: #f7fafc; color: #4a5568; font-size: 13px; padding: 12px 10px;
+            text-align: left; border-bottom: 2px solid #e2e8f0;
+        }
+        th.sortable { user-select: none; }
+        th .sort-btn {
+            display: inline-block; width: 20px; height: 20px; line-height: 20px;
+            text-align: center; font-size: 11px; margin-left: 2px; cursor: pointer;
+            border: 1px solid transparent; border-radius: 3px; color: #cbd5e0;
+            background: transparent; transition: all 0.15s; vertical-align: middle;
+        }
+        th .sort-btn:hover { color: #667eea; border-color: #667eea; background: #eef0ff; }
+        th .sort-btn.active { color: #fff; background: #667eea; border-color: #667eea; font-weight: bold; }
+        /* 清除排序按钮 */
+        .clear-sort {
+            display: inline-block; margin-left: 12px; font-size: 12px; color: #f56565;
+            text-decoration: none; cursor: pointer; font-weight: normal;
+        }
+        .clear-sort:hover { text-decoration: underline; }
+        table td {
+            padding: 10px; font-size: 14px; border-bottom: 1px solid #edf2f7;
+            color: #4a5568;
+        }
+        table tbody tr:hover { background: #f7fafc; }
+        .product-img { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; border: 1px solid #eee; }
+        .no-img { width: 50px; height: 50px; border-radius: 5px; background: #edf2f7; display: inline-flex;
+                  align-items: center; justify-content: center; font-size: 12px; color: #a0aec0; }
+        /* 分页 */
+        .pagination {
+            display: flex; justify-content: center; align-items: center;
+            padding: 20px; gap: 5px; flex-wrap: wrap;
+        }
+        .pagination a, .pagination span {
+            padding: 7px 13px; border-radius: 5px; font-size: 14px; text-decoration: none;
+            border: 1px solid #e2e8f0; color: #4a5568; transition: all 0.2s;
+        }
+        .pagination a:hover { background: #667eea; color: #fff; border-color: #667eea; }
+        .pagination .active { background: #667eea; color: #fff; border-color: #667eea; font-weight: bold; }
+        .pagination .disabled { color: #cbd5e0; pointer-events: none; }
+        .pagination .info { font-size: 13px; color: #a0aec0; margin-left: 10px; }
+        /* 弹窗 */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #fff; border-radius: 10px; padding: 30px; width: 480px;
+            max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal h3 { margin-bottom: 20px; font-size: 18px; }
+        .modal .form-group { margin-bottom: 15px; }
+        .modal .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
+        .modal .form-group input, .modal .form-group select, .modal .form-group textarea {
+            width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;
+        }
+        .modal .form-group textarea { resize: vertical; }
+        .modal .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+        .modal img.preview { max-width: 120px; max-height: 120px; margin-top: 8px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <!-- 顶部 -->
+    <div class="header">
+        <span class="sys-name">📦 商品管理</span>
+        <span>
+            <a th:href="@{/index}">返回首页</a> &nbsp;|&nbsp;
+            <a th:href="@{/logout}">退出登录</a>
+        </span>
+    </div>
+
+    <div class="container">
+        <!-- 搜索栏 -->
+        <form class="search-bar" th:action="@{/product/list}" method="get">
+            <div class="field">
+                <label>商品名称</label>
+                <input type="text" name="name" th:value="${name}" placeholder="模糊搜索">
+            </div>
+            <div class="field">
+                <label>商品分类</label>
+                <select name="category">
+                    <option value="">全部分类</option>
+                    <option value="电子产品" th:selected="${category == '电子产品'}">电子产品</option>
+                    <option value="服装鞋帽" th:selected="${category == '服装鞋帽'}">服装鞋帽</option>
+                    <option value="食品饮料" th:selected="${category == '食品饮料'}">食品饮料</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">🔍 搜索</button>
+            <button type="button" class="btn btn-success" onclick="openAddModal()">＋ 新增商品</button>
+        </form>
+
+        <!-- 数据表格 -->
+        <div class="table-box">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="sortable">
+                            ID
+                            <span class="sort-btn" id="btn-id-asc" onclick="sortBy('id','asc')" title="按ID升序">▲</span>
+                            <span class="sort-btn" id="btn-id-desc" onclick="sortBy('id','desc')" title="按ID降序">▼</span>
+                        </th>
+                        <th>图片</th>
+                        <th>名称</th>
+                        <th>分类</th>
+                        <th class="sortable">
+                            价格 (¥)
+                            <span class="sort-btn" id="btn-price-asc" onclick="sortBy('price','asc')" title="按价格升序">▲</span>
+                            <span class="sort-btn" id="btn-price-desc" onclick="sortBy('price','desc')" title="按价格降序">▼</span>
+                        </th>
+                        <th class="sortable">
+                            库存
+                            <span class="sort-btn" id="btn-stock-asc" onclick="sortBy('stock','asc')" title="按库存升序">▲</span>
+                            <span class="sort-btn" id="btn-stock-desc" onclick="sortBy('stock','desc')" title="按库存降序">▼</span>
+                        </th>
+                        <th>
+                            创建时间
+                            <a class="clear-sort" id="clearSortLink" style="display:none;" onclick="clearSort()" title="恢复默认排序">✕ 清除排序</a>
+                        </th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${page.records}">
+                        <td th:text="${p.id}">1</td>
+                        <td>
+                            <img th:if="${p.image}" th:src="${p.image}" class="product-img">
+                            <span th:unless="${p.image}" class="no-img">无图</span>
+                        </td>
+                        <td th:text="${p.name}">商品名称</td>
+                        <td th:text="${p.category}">分类</td>
+                        <td th:text="${#numbers.formatDecimal(p.price, 1, 2)}">0.00</td>
+                        <td th:text="${p.stock}">0</td>
+                        <td th:text="${#temporals.format(p.createTime, 'yyyy-MM-dd HH:mm')}">时间</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding:4px 10px;font-size:12px;"
+                                    th:attr="data-id=${p.id}" onclick="openEditModal(this.dataset.id)">编辑</button>
+                            <button class="btn btn-danger" style="padding:4px 10px;font-size:12px;"
+                                    th:attr="data-id=${p.id}" onclick="doDelete(this.dataset.id)">删除</button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(page.records)}">
+                        <td colspan="8" style="text-align:center;padding:40px;color:#a0aec0;">暂无数据</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- 分页 -->
+            <div class="pagination" th:if="${page.total > 0}">
+                <a th:classappend="${page.current <= 1} ? 'disabled'"
+                   th:href="@{/product/list(pageNum=${page.current - 1}, name=${name}, category=${category}, sortField=${sortField}, sortOrder=${sortOrder})}">上一页</a>
+
+                <th:block th:each="i : ${#numbers.sequence(1, page.pages)}">
+                    <th:block th:if="${i >= page.current - 2 && i <= page.current + 2}">
+                        <a th:text="${i}"
+                           th:classappend="${i == page.current} ? 'active'"
+                           th:href="@{/product/list(pageNum=${i}, name=${name}, category=${category}, sortField=${sortField}, sortOrder=${sortOrder})}"></a>
+                    </th:block>
+                </th:block>
+
+                <a th:classappend="${page.current >= page.pages} ? 'disabled'"
+                   th:href="@{/product/list(pageNum=${page.current + 1}, name=${name}, category=${category}, sortField=${sortField}, sortOrder=${sortOrder})}">下一页</a>
+
+                <span class="info" th:text="'共 ' + ${page.total} + ' 条，第 ' + ${page.current} + '/' + ${page.pages} + ' 页'"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ 新增/编辑弹窗 ============ -->
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal">
+            <h3 id="modalTitle">新增商品</h3>
+            <form id="productForm" enctype="multipart/form-data">
+                <input type="hidden" id="editId" name="id">
+
+                <div class="form-group">
+                    <label>商品名称 *</label>
+                    <input type="text" name="name" id="formName" required>
+                </div>
+                <div class="form-group">
+                    <label>分类</label>
+                    <select name="category" id="formCategory">
+                        <option value="">-- 请选择 --</option>
+                        <option value="电子产品">电子产品</option>
+                        <option value="服装鞋帽">服装鞋帽</option>
+                        <option value="食品饮料">食品饮料</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>价格 *</label>
+                    <input type="number" step="0.01" name="price" id="formPrice" required>
+                </div>
+                <div class="form-group">
+                    <label>库存</label>
+                    <input type="number" name="stock" id="formStock" value="0">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea name="description" id="formDesc" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>商品图片</label>
+                    <input type="file" name="imageFile" id="formImage" accept="image/*" onchange="previewImage(this)">
+                    <img id="imgPreview" class="preview" style="display:none;">
+                </div>
+                <div class="btn-row">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // ========== 弹窗控制 ==========
+        function openModal() { document.getElementById('modalOverlay').classList.add('active'); }
+        function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); resetForm(); }
+
+        function resetForm() {
+            document.getElementById('productForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('formImage').value = '';
+            document.getElementById('imgPreview').style.display = 'none';
+        }
+
+        function previewImage(input) {
+            const preview = document.getElementById('imgPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { preview.src = e.target.result; preview.style.display = 'block'; };
+                reader.readAsDataURL(input.files[0]);
+            } else { preview.style.display = 'none'; }
+        }
+
+        // ========== 新增 ==========
+        function openAddModal() {
+            resetForm();
+            document.getElementById('modalTitle').innerText = '新增商品';
+            document.getElementById('productForm').action = '/product/add';
+            openModal();
+        }
+
+        // ========== 编辑 ==========
+        function openEditModal(id) {
+            resetForm();
+            document.getElementById('modalTitle').innerText = '编辑商品';
+            document.getElementById('productForm').action = '/product/edit';
+            // Ajax 获取商品详情
+            fetch('/product/get?id=' + id)
+                .then(r => r.json())
+                .then(res => {
+                    if (res.code === 200) {
+                        const p = res.data;
+                        document.getElementById('editId').value = p.id;
+                        document.getElementById('formName').value = p.name || '';
+                        document.getElementById('formCategory').value = p.category || '';
+                        document.getElementById('formPrice').value = p.price || '';
+                        document.getElementById('formStock').value = p.stock || 0;
+                        document.getElementById('formDesc').value = p.description || '';
+                        if (p.image) {
+                            document.getElementById('imgPreview').src = p.image;
+                            document.getElementById('imgPreview').style.display = 'block';
+                        }
+                        openModal();
+                    } else { alert(res.msg); }
+                });
+        }
+
+        // ========== 表单提交（Ajax） ==========
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch(this.action, { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(res => {
+                    alert(res.msg);
+                    if (res.code === 200) location.reload();
+                });
+        });
+
+        // ========== 删除 ==========
+        function doDelete(id) {
+            if (!confirm('确定要删除该商品吗？')) return;
+            fetch('/product/delete?id=' + id)
+                .then(r => r.json())
+                .then(res => {
+                    alert(res.msg);
+                    if (res.code === 200) location.reload();
+                });
+        }
+
+        // 点击遮罩关闭弹窗
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ========== 排序功能 ==========
+        // 读取当前排序状态（由服务端 Thymeleaf 渲染注入）
+        const currentSortField = /*[[${sortField}]]*/ null;
+        const currentSortOrder = /*[[${sortOrder}]]*/ null;
+
+        // 页面加载时高亮当前排序按钮
+        (function initSortBtns() {
+            if (currentSortField && currentSortOrder) {
+                const btn = document.getElementById('btn-' + currentSortField + '-' + currentSortOrder);
+                if (btn) btn.classList.add('active');
+                const clearLink = document.getElementById('clearSortLink');
+                if (clearLink) clearLink.style.display = 'inline-block';
+            }
+        })();
+
+        /**
+         * 点击排序按钮：直接以指定方向排序
+         */
+        function sortBy(field, order) {
+            const params = new URLSearchParams(window.location.search);
+            params.set('sortField', field);
+            params.set('sortOrder', order);
+            params.set('pageNum', '1'); // 排序时回到第 1 页
+            window.location.search = params.toString();
+        }
+
+        /**
+         * 清除排序，恢复默认（按创建时间降序）
+         */
+        function clearSort() {
+            const params = new URLSearchParams(window.location.search);
+            params.delete('sortField');
+            params.delete('sortOrder');
+            params.set('pageNum', '1');
+            window.location.search = params.toString();
+        }
+    </script>
+</body>
+</html>

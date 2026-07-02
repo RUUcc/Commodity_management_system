@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace 绑定 Mapper 接口 -->
+<mapper namespace="org.example.commodity_management_system_jzs.mapper.ProductMapper">
+
+    <!-- 结果映射：数据库字段(下划线) → 实体属性(驼峰) -->
+    <resultMap id="ProductResultMap" type="org.example.commodity_management_system_jzs.entity.Product">
+        <id     property="id"          column="id"/>
+        <result property="name"        column="name"/>
+        <result property="category"    column="category"/>
+        <result property="price"       column="price"/>
+        <result property="stock"       column="stock"/>
+        <result property="image"       column="image"/>
+        <result property="description" column="description"/>
+        <result property="createTime"  column="create_time"/>
+        <result property="updateTime"  column="update_time"/>
+    </resultMap>
+
+    <!--
+        动态 SQL：多条件组合查询
+        演示 MyBatis 核心标签：<where> <if> <foreach>
+    -->
+    <select id="selectByCondition" resultMap="ProductResultMap">
+        SELECT * FROM tb_product
+        <where>
+            <!-- 按名称模糊查询 -->
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <!-- 按分类精确匹配 -->
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <!-- 价格区间筛选 -->
+            <if test="minPrice != null">
+                AND price &gt;= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND price &lt;= #{maxPrice}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 按分类统计商品数量 -->
+    <select id="countByCategory" resultType="int">
+        SELECT COUNT(*) FROM tb_product
+        WHERE category = #{category}
+    </select>
+
+</mapper>
